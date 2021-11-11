@@ -4,6 +4,7 @@ import querystring from 'query-string'
 import request from 'request'
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
+import schedule from 'node-schedule'
 
 import { promises as fs } from 'fs'
 import path from 'path'
@@ -29,33 +30,44 @@ let generateRandomString = function(length: number) {
 
 let stateKey = 'spotify_auth_state';
 
-
 (async () => {
   try {
     await app.prepare();
     const server = express();
+    request.get('http://localhost:3000/login')
+
+    schedule.scheduleJob('*/3550 * * * * *', function(){
+      request.get('http://localhost:3000/login')
+    });
 
     server
     .use(cors())
     .use(cookieParser());
 
     server.get('/login', function(req, res) {
+      console.log('LOGIN!!!');
 
-      var state = generateRandomString(16);
-      res.cookie(stateKey, state);
-    
-      var scope = 'user-read-private user-read-email';
-      res.redirect('https://accounts.spotify.com/authorize?' +
-        querystring.stringify({
-          response_type: 'code',
-          client_id: client_id,
-          scope: scope,
-          redirect_uri: redirect_uri,
-          state: state
-        }));
+      try {
+        var state = generateRandomString(16);
+        res.cookie(stateKey, state);
+      
+        var scope = 'user-read-private user-read-email';
+        res.redirect('https://accounts.spotify.com/authorize?' +
+          querystring.stringify({
+            response_type: 'code',
+            client_id: client_id,
+            scope: scope,
+            redirect_uri: redirect_uri,
+            state: state
+          }));
+      } catch (error) {
+        console.log('error', error);
+      }
     });
     
     server.get('/callback', function(req, res) {
+      console.log('callback !!!');
+      
       var code = req.query.code || null;
       var state = req.query.state || null;
       var storedState = req.cookies ? req.cookies[stateKey] : null;
@@ -85,6 +97,8 @@ let stateKey = 'spotify_auth_state';
     
             var access_token = body.access_token,
                 refresh_token = body.refresh_token;
+                
+            console.log('access_token !!!', access_token);
 
             const apiKeyFile = path.join(process.cwd(), '/api_key_spotify/key.txt')
             await fs.writeFile(apiKeyFile, access_token)
