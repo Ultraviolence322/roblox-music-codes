@@ -53,6 +53,8 @@ export const getStaticProps = async ( ) => {
         },
       })
       const searchData = await searchResponse.json()
+      console.log('searchData', searchData);
+      
 
       if (searchData.tracks?.items[0]) {
         return {
@@ -71,7 +73,7 @@ export const getStaticProps = async ( ) => {
 
   return { 
     props: { resArr: resArr.filter(e => !!e) },
-    revalidate: 3500,
+    revalidate: 3600,
   }
 }
 
