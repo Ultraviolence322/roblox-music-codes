@@ -48,7 +48,7 @@ function updateApiKey() {
     const server = express();
     updateApiKey()
 
-    schedule.scheduleJob('*/3555 * * * * *', function(){
+    schedule.scheduleJob('0 */55 * * * *', function(){
       updateApiKey()
     });
 
