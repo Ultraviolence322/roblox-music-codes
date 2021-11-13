@@ -13,8 +13,8 @@ export interface ISong {
   value: value
 }
 
-export interface IParseSong  {
-  id: string,
-  name: string
-  code: number,
+export interface IParsedSong  {
+  id?: string,
+  songName: string
+  songCode: number,
 }
