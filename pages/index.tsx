@@ -9,6 +9,10 @@ import { parseName } from '../helpers/parseName'
 
 const Home = ({allSongs, apiKey}: InferGetStaticPropsType<typeof getStaticProps>) => {
   const [readySongs, setReadySongs] = useState<IParsedSong[]>([])
+  const [currentSong, setCurrentSong] = useState<number>(0)
+  const [player, setPlayer] = useState(undefined);
+  const [isPlaying, setIsPlaying] = useState(false)
+
   const countOfSongs: number = allSongs.length
 
   useEffect(() => {
@@ -29,37 +33,47 @@ const Home = ({allSongs, apiKey}: InferGetStaticPropsType<typeof getStaticProps>
   }, [])
 
   const prevSong = () => {
-
+    if(currentSong > 0) {
+      setCurrentSong(currentSong - 1)
+    }
   } 
 
   const nextSong = async () => {
-    const fetchedSong: IParsedSong | null = await fetchNewSong(allSongs, countOfSongs, apiKey)
+    if(currentSong === readySongs.length - 3) {
+      const fetchedSong: IParsedSong | null = await fetchNewSong(allSongs, countOfSongs, apiKey)
 
-    if(fetchedSong) {
-      setReadySongs([...readySongs, fetchedSong])
+      if(fetchedSong) {
+        setReadySongs([...readySongs, fetchedSong])
+        setCurrentSong(currentSong + 1)
+      }
+    } else {
+      setCurrentSong(currentSong + 1)
     }
   } 
   
-  console.log('readySongs', readySongs);
-  
   return (
-    <div className="bg-red-300 ">
-      <div>
-        <button onClick={prevSong}>prev</button>
-        <button onClick={nextSong}>next</button>
+    <div className="bg-red-300 h-screen">
+      <div className="w-lowest mx-auto">
+        <div className="flex justify-center">
+          <button className="p-2 m-2 border-2 border-gray-300" onClick={prevSong}>prev</button>
+          <button className="p-2 m-2 border-2 border-gray-300" onClick={nextSong}>next</button>
+        </div>
+        <ul className="mt-4 p-2 border-2 border-red-500">
+          {
+            readySongs.map((e, index: number) => {
+              return (
+                <li className={currentSong === index ? 'h-auto current-song' : 'h-0 overflow-hidden'} key={index}>
+                  <p><span>{index}. </span> {e.songName} - {e.songCode}</p>
+                  <iframe 
+                    className="w-full h-80px" 
+                    src={`https://open.spotify.com/embed/track/${e?.id}`}
+                  ></iframe>
+                </li>
+              )
+            })
+          }
+        </ul>
       </div>
-      <ul>
-        {
-          readySongs.map((e: any, index: any) => {
-            return (
-              <li key={index}>
-                <p><span>{index}. </span> {e.songName} - {e.songCode}</p>
-                <iframe src={`https://open.spotify.com/embed/track/${e?.id}`}></iframe>
-              </li>
-            )
-          })
-        }
-      </ul>
     </div>
   )
 }

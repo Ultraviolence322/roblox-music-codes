@@ -4,7 +4,7 @@ export const fetchNewSong = async (allSongs: IParsedSong[], countOfSongs: number
   const randomIndexOfArr: number = Math.floor(Math.random() * countOfSongs)
   const currentSong: IParsedSong = allSongs[randomIndexOfArr]
 
-  const searchResponse= await fetch(`https://api.spotify.com/v1/search?q=${currentSong.songName}&type=track&limit=1`, {
+  const searchResponse = await fetch(`https://api.spotify.com/v1/search?q=${currentSong.songName}&type=track&limit=1`, {
     method: 'GET',
     headers: {
       'User-Agent': 'ANYTHING_WILL_WORK_HERE',
