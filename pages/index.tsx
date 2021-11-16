@@ -1,19 +1,85 @@
+// types 
 import type { InferGetStaticPropsType } from 'next'
 import { IParsedSong, ISong } from '../types/ISong'
 
 import { promises as fs } from 'fs'
 import path from 'path'
+
 import { useEffect, useState } from 'react'
+
+// helpers
 import { fetchNewSong } from '../helpers/fetchNewSong'
 import { parseName } from '../helpers/parseName'
 
 const Home = ({allSongs, apiKey}: InferGetStaticPropsType<typeof getStaticProps>) => {
   const [readySongs, setReadySongs] = useState<IParsedSong[]>([])
   const [currentSong, setCurrentSong] = useState<number>(0)
-  const [player, setPlayer] = useState(undefined);
-  const [isPlaying, setIsPlaying] = useState(false)
+
+  const [player, setPlayer] = useState<any>(undefined);
+  const [deviceId, setDeviceId] = useState('')
+  const [is_paused, setPaused] = useState(false);
 
   const countOfSongs: number = allSongs.length
+
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src = "https://sdk.scdn.co/spotify-player.js";
+    script.async = true;
+
+    document.body.appendChild(script);
+
+    (window as any).onSpotifyWebPlaybackSDKReady = () => {
+      const player = new (window as any).Spotify.Player({
+        name: 'Web Playback SDK',
+        getOAuthToken: (cb: any) => { cb(apiKey); },
+        volume: 0.5
+      });
+
+      player.addListener('ready', ({ device_id }: any) => {
+        console.log('Ready with Device ID', device_id);
+        setDeviceId(device_id)
+      });
+
+      player.addListener('not_ready', ({ device_id }: any) => {
+        console.log('Device ID has gone offline', device_id);
+      });
+
+      player.addListener('initialization_error', ({ message }: any) => { 
+        console.log('error', message);
+      });
+    
+      player.addListener('authentication_error', ({ message }: any) => {
+          console.log('error', message);
+      });
+    
+      player.addListener('account_error', ({ message }: any) => {
+          console.log('error', message);
+      });
+
+      player.addListener('playback_error', ({ message }: any) => {
+        console.log('error', message);
+      });
+
+      player.addListener('player_state_changed', ( (state: any) => {
+        console.log('state', state);
+
+        if (!state) {
+            return;
+        }
+    
+        setPaused(state.paused);
+      }));
+
+      setPlayer(player);
+
+      player.connect().then((success: any) => {
+        if (success) {
+          console.log('The Web Playback SDK successfully connected to Spotify!');
+        }
+      })
+
+    };
+  }, []);
 
   useEffect(() => {
     const getData = async () => {
@@ -32,13 +98,22 @@ const Home = ({allSongs, apiKey}: InferGetStaticPropsType<typeof getStaticProps>
     getData()
   }, [])
 
-  const prevSong = () => {
+  const prevSong = async () => {
     if(currentSong > 0) {
       setCurrentSong(currentSong - 1)
     }
   } 
 
   const nextSong = async () => {
+    fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`, {
+      body: '{"uris": ["spotify:track:7w87IxuO7BDcJ3YUqCyMTT"]}',
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json"
+      },
+      method: "PUT"
+    })
+    
     if(currentSong === readySongs.length - 3) {
       const fetchedSong: IParsedSong | null = await fetchNewSong(allSongs, countOfSongs, apiKey)
 
@@ -54,6 +129,19 @@ const Home = ({allSongs, apiKey}: InferGetStaticPropsType<typeof getStaticProps>
   return (
     <div className="bg-red-300 h-screen">
       <div className="w-lowest mx-auto">
+
+        <button className="btn-spotify" onClick={() => { player.previousTrack() }} >
+          &lt;&lt;
+        </button>
+
+        <button className="btn-spotify" onClick={() => { player.togglePlay() }} >
+          { is_paused ? "PLAY" : "PAUSE" }
+        </button>
+
+        <button className="btn-spotify" onClick={() => { player.nextTrack() }} >
+          &gt;&gt;
+        </button>
+        
         <div className="flex justify-center">
           <button className="p-2 m-2 border-2 border-gray-300" onClick={prevSong}>prev</button>
           <button className="p-2 m-2 border-2 border-gray-300" onClick={nextSong}>next</button>
