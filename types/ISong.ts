@@ -17,4 +17,6 @@ export interface IParsedSong  {
   id?: string,
   songName: string
   songCode: number,
+  duration?: number,
+  image?: string
 }

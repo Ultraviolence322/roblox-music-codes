@@ -1,7 +1,17 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+@import url('https://fonts.googleapis.com/css2?family=Pacifico&display=swap');
 
 *{
   box-sizing: border-box;
+}
+
+p {
+  font-family: 'Pacifico', cursive;
+  white-space: pre;
+}
+
+.text-shadow {
+  text-shadow: 0px 0px 30px rgba(0, 0, 0, 1);
 }

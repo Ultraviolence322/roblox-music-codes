@@ -10,9 +10,12 @@ import { useEffect, useState } from 'react'
 // helpers
 import { fetchNewSong } from '../helpers/fetchNewSong'
 import { parseName } from '../helpers/parseName'
+import { parseNameToView } from '../helpers/parseNameToView'
 
 const Home = ({allSongs, apiKey}: InferGetStaticPropsType<typeof getStaticProps>) => {
   const [readySongs, setReadySongs] = useState<any[]>([])
+  const [playedSongs, setPlayedSongs] = useState(0)
+  const [isStarted, setIsStarted] = useState(false)
 
   const [deviceId, setDeviceId] = useState('')
   const [player, setPlayer] = useState<any>(null);
@@ -88,57 +91,106 @@ const Home = ({allSongs, apiKey}: InferGetStaticPropsType<typeof getStaticProps>
           songs.push(fetchedSong)
         }
       }
-
-      console.log('songs', songs);
+      
       setReadySongs(songs)
     }
 
     getData()
   }, [])
 
-  const switchSongs = () => {
-    player?.nextTrack()
-    player?.seek(60000).then(() => {
-      setTimeout(() => {
-        switchSongs()
-      }, 6000)
-    });
-  }
+  useEffect(() => {
+    function startPlay(e: any) {
+      if (e.code === 'KeyS') setIsStarted(true)
+    }
 
-  const start = async () => {
-    await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`, {
-      body: JSON.stringify({
-        uris: readySongs.map(e => `spotify:track:${e.id}`,),
-        "position_ms": 60000
-      }),
-      headers: {
-        "Authorization": `Bearer ${apiKey}`,
-        "Content-Type": "application/json"
-      },
-      method: "PUT"
+    window.addEventListener('keydown', startPlay)
+
+    return () => {
+      window.removeEventListener('keydown', startPlay)
+    }
+  }, [])
+
+  useEffect(() => {
+    const getData = async () => {
+      player?.nextTrack()
+      player?.seek(readySongs[playedSongs]?.duration / 3).then(() => {
+        setTimeout(() => {
+          setPlayedSongs(playedSongs => playedSongs + 1)
+        }, 6000)
+      });
+    }
+
+    window.scrollBy({
+      top: document.documentElement.clientHeight,
+      behavior: "smooth"
     })
+    getData()
+  }, [playedSongs])
 
-    setTimeout(() => {
-      switchSongs()
-    }, 6000)
-  }
+  useEffect(() => {
+    const start = async () => {
+      await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`, {
+        body: JSON.stringify({
+          uris: readySongs.map(e => `spotify:track:${e.id}`,),
+          "position_ms": readySongs[0]?.duration / 3
+        }),
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "Content-Type": "application/json"
+        },
+        method: "PUT"
+      })
   
+      setTimeout(() => {
+        setPlayedSongs(playedSongs + 1)
+      }, 6000)
+    }
+
+    if(isStarted) start()
+  }, [isStarted])
+
+  const trackNameClassName = () => {
+    let className = `
+      animate-wiggle 
+      px-2
+      w-full 
+      absolute top-72
+      transform  
+      text-9xl font-black text-center text-white text-shadow
+    `
+    return className
+  }
+
+  const trackCodeClassName = () => {
+    let className = `
+      animate-wiggle 
+      w-full 
+      absolute bottom-60
+      transform  
+      text-11xl font-black text-center text-white text-shadow
+    `
+    return className
+  }
+
   return (
-    <div className="bg-red-300 h-screen">
-      <div className="w-lowest mx-auto">
-        <button onClick={start}>start</button>
-        <ul className="mt-4 p-2 border-2 border-red-500">
-          {
-            readySongs.map(e => {
-              return (
-                <li className={e.id === currentTrack?.id ? 'h-auto current-song' : 'h-0 overflow-hidden'} key={e.id}>
-                  <p>{e.songName} - {e.songCode}</p>
-                </li>
-              )
-            })
-          }
-        </ul>
-      </div>
+    <div>
+      <ul>
+        {
+          readySongs.map((e, index) => {
+            return (
+              <li className={'h-auto current-song relative'} key={e.id}>
+                <img className='w-screen h-screen filter blur-md' src={e?.image} alt="image" />
+                <p className={trackNameClassName()}>
+                  {parseNameToView(e?.songName)}
+                </p>
+                <p className={trackCodeClassName()}>
+                  {e?.songCode}
+                </p>
+              </li>
+            )
+          })
+        }
+      </ul>
     </div>
   )
 }
