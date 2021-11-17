@@ -12,12 +12,12 @@ import { fetchNewSong } from '../helpers/fetchNewSong'
 import { parseName } from '../helpers/parseName'
 
 const Home = ({allSongs, apiKey}: InferGetStaticPropsType<typeof getStaticProps>) => {
-  const [readySongs, setReadySongs] = useState<IParsedSong[]>([])
-  const [currentSong, setCurrentSong] = useState<number>(0)
+  const [readySongs, setReadySongs] = useState<any[]>([])
 
-  const [player, setPlayer] = useState<any>(undefined);
   const [deviceId, setDeviceId] = useState('')
-  const [is_paused, setPaused] = useState(false);
+  const [player, setPlayer] = useState<any>(null);
+
+  const [currentTrack, setCurrentTrack] = useState<any>(null)
 
   const countOfSongs: number = allSongs.length
 
@@ -63,11 +63,9 @@ const Home = ({allSongs, apiKey}: InferGetStaticPropsType<typeof getStaticProps>
       player.addListener('player_state_changed', ( (state: any) => {
         console.log('state', state);
 
-        if (!state) {
-            return;
+        if (state) {
+          setCurrentTrack(state.track_window.current_track)
         }
-    
-        setPaused(state.paused);
       }));
 
       setPlayer(player);
@@ -77,7 +75,6 @@ const Home = ({allSongs, apiKey}: InferGetStaticPropsType<typeof getStaticProps>
           console.log('The Web Playback SDK successfully connected to Spotify!');
         }
       })
-
     };
   }, []);
 
@@ -85,77 +82,57 @@ const Home = ({allSongs, apiKey}: InferGetStaticPropsType<typeof getStaticProps>
     const getData = async () => {
       let songs: IParsedSong[] = []
 
-      while(songs.length < 3) {
+      while(songs.length < 20) {
         const fetchedSong = await fetchNewSong(allSongs, countOfSongs, apiKey)
-        if(fetchedSong) {
+        if(fetchedSong && !songs.find((track: any) => track.id === fetchedSong.id)) {
           songs.push(fetchedSong)
         }
       }
 
+      console.log('songs', songs);
       setReadySongs(songs)
     }
-    
+
     getData()
   }, [])
 
-  const prevSong = async () => {
-    if(currentSong > 0) {
-      setCurrentSong(currentSong - 1)
-    }
-  } 
+  const switchSongs = () => {
+    player?.nextTrack()
+    player?.seek(60000).then(() => {
+      setTimeout(() => {
+        switchSongs()
+      }, 6000)
+    });
+  }
 
-  const nextSong = async () => {
-    fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`, {
-      body: '{"uris": ["spotify:track:7w87IxuO7BDcJ3YUqCyMTT"]}',
+  const start = async () => {
+    await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`, {
+      body: JSON.stringify({
+        uris: readySongs.map(e => `spotify:track:${e.id}`,),
+        "position_ms": 60000
+      }),
       headers: {
         "Authorization": `Bearer ${apiKey}`,
         "Content-Type": "application/json"
       },
       method: "PUT"
     })
-    
-    if(currentSong === readySongs.length - 3) {
-      const fetchedSong: IParsedSong | null = await fetchNewSong(allSongs, countOfSongs, apiKey)
 
-      if(fetchedSong) {
-        setReadySongs([...readySongs, fetchedSong])
-        setCurrentSong(currentSong + 1)
-      }
-    } else {
-      setCurrentSong(currentSong + 1)
-    }
-  } 
+    setTimeout(() => {
+      switchSongs()
+    }, 6000)
+  }
   
   return (
     <div className="bg-red-300 h-screen">
       <div className="w-lowest mx-auto">
-
-        <button className="btn-spotify" onClick={() => { player.previousTrack() }} >
-          &lt;&lt;
-        </button>
-
-        <button className="btn-spotify" onClick={() => { player.togglePlay() }} >
-          { is_paused ? "PLAY" : "PAUSE" }
-        </button>
-
-        <button className="btn-spotify" onClick={() => { player.nextTrack() }} >
-          &gt;&gt;
-        </button>
-        
-        <div className="flex justify-center">
-          <button className="p-2 m-2 border-2 border-gray-300" onClick={prevSong}>prev</button>
-          <button className="p-2 m-2 border-2 border-gray-300" onClick={nextSong}>next</button>
-        </div>
+        <button onClick={start}>start</button>
         <ul className="mt-4 p-2 border-2 border-red-500">
           {
-            readySongs.map((e, index: number) => {
+            readySongs.map(e => {
               return (
-                <li className={currentSong === index ? 'h-auto current-song' : 'h-0 overflow-hidden'} key={index}>
-                  <p><span>{index}. </span> {e.songName} - {e.songCode}</p>
-                  <iframe 
-                    className="w-full h-80px" 
-                    src={`https://open.spotify.com/embed/track/${e?.id}`}
-                  ></iframe>
+                <li className={e.id === currentTrack?.id ? 'h-auto current-song' : 'h-0 overflow-hidden'} key={e.id}>
+                  <p>{e.songName} - {e.songCode}</p>
                 </li>
               )
             })
