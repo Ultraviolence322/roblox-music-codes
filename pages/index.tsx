@@ -151,7 +151,6 @@ const Home = ({allSongs, apiKey}: InferGetStaticPropsType<typeof getStaticProps>
 
   const trackNameClassName = () => {
     let className = `
-      animate-wiggle 
       px-2
       w-full 
       absolute top-72
@@ -163,7 +162,6 @@ const Home = ({allSongs, apiKey}: InferGetStaticPropsType<typeof getStaticProps>
 
   const trackCodeClassName = () => {
     let className = `
-      animate-wiggle 
       w-full 
       absolute bottom-60
       transform  
