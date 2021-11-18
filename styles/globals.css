@@ -3,13 +3,23 @@
 @tailwind utilities;
 @import url('https://fonts.googleapis.com/css2?family=Pacifico&display=swap');
 
+::-webkit-scrollbar { /* chrome based */
+  width: 0px;  /* ширина scrollbar'a */
+  background: transparent;  /* опционально */
+}
+
+
 *{
   box-sizing: border-box;
 }
 
 p {
   font-family: 'Pacifico', cursive;
-  white-space: pre;
+  white-space: pre-wrap;
+}
+
+body {
+  overflow: hidden;
 }
 
 .text-shadow {

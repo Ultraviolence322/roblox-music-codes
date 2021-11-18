@@ -19,7 +19,10 @@ module.exports = {
        },
        animation: {
         wiggle: 'wiggle 1s ease-in-out infinite',
-       }
+       },
+       screens: {
+        'usm': '320px',
+      },  
     },
   },
   variants: {
