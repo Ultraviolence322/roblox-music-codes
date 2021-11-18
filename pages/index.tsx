@@ -85,7 +85,7 @@ const Home = ({allSongs, apiKey}: InferGetStaticPropsType<typeof getStaticProps>
     const getData = async () => {
       let songs: IParsedSong[] = []
 
-      while(songs.length < 20) {
+      while(songs.length < 9) {
         const fetchedSong = await fetchNewSong(allSongs, countOfSongs, apiKey)
         if(fetchedSong && !songs.find((track: any) => track.id === fetchedSong.id)) {
           songs.push(fetchedSong)
@@ -208,9 +208,9 @@ export const getStaticProps = async ( ) => {
       const songs: ISong[] = await songsResponse.json() 
       const parsedArray: IParsedSong[] = []
 
-      songs.splice(0, 20).forEach(song => {
+      songs.forEach(song => {
         const songName = song.value.nameofthesong ? parseName(song.value.nameofthesong) : ''
-        const songCode = +song.value.robloxcode.replace('<k1>', '').replace('</k1>', '')
+        const songCode = +song.value.robloxcode?.replace('<k1>', '').replace('</k1>', '')
 
         parsedArray.push({
           songName,
