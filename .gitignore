@@ -35,3 +35,5 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
+
+/api_key_spotify
