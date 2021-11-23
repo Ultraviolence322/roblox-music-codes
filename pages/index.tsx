@@ -121,7 +121,7 @@ const Home = ({allSongs, apiKey}: InferGetStaticPropsType<typeof getStaticProps>
     }
 
     window.scrollBy({
-      top: document.documentElement.clientHeight,
+      top: 1080,
       behavior: "smooth"
     })
     getData()
@@ -149,6 +149,23 @@ const Home = ({allSongs, apiKey}: InferGetStaticPropsType<typeof getStaticProps>
     if(isStarted) start()
   }, [isStarted])
 
+  //w-600px
+  //w-full
+
+  //-translate-x-2/4
+  //
+
+  //left-1/2
+  //
+
+  //codes bottom-1/3
+  //2xl:bottom-60
+
+  //text-7xl
+  //text-9xl
+
+  //text-8xl
+  //text-11xl
   const trackNameClassName = () => {
     let className = `
       px-4
@@ -179,11 +196,16 @@ const Home = ({allSongs, apiKey}: InferGetStaticPropsType<typeof getStaticProps>
               <li className={'h-auto current-song relative'} key={e.id}>
                 <img className='w-screen h-screen filter blur-md' src={e?.image} alt="image" />
                 <p className={trackNameClassName()}>
-                  {parseNameToView(e?.songName)}
+                  <div className="animate-wiggle">
+                    {parseNameToView(e?.songName)}
+                  </div>
                 </p>
                 <p className={trackCodeClassName()}>
-                  {e?.songCode}
+                  <div className="animate-wiggle">
+                    {e?.songCode}
+                  </div>
                 </p>
+                <span style={{fontSize: '8px'}} className="absolute bottom-0 left-0">{index}</span>
               </li>
             )
           })

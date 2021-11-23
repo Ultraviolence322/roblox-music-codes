@@ -5,7 +5,9 @@ module.exports = {
     extend: {
       spacing: {
         'lowest': '300px',
-        '80px': '80px'
+        '80px': '80px',
+        '600px': '600px',
+        '500px': '500px'
       },
       fontSize: {
         '10xl': '10rem',
